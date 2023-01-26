@@ -103,8 +103,13 @@ def fitness(individual_given):
 	hip2.publish(0)
 	hip3.publish(0)
 	hip4.publish(0)
+
+	p = os.popen("rosrun xacro xacro.py " + "~/catkin_ws/src/rupert_learns/urdf/rupert.xacro")
+	xml_string = p.read()
+	p.close()
 	
-	spawn_model("rupert",xml_string,"",pose,"world")
+	print(xml_string)
+	spawn_model(model_name="rupert",model_xml=xml_string,robot_namespace="",initial_pose=pose,reference_frame="world")
 	try:
 		load_controllers()
 	except:
@@ -471,7 +476,7 @@ def unload_controllers():
 	#rospy.loginfo("STARTING")
 	rospy.wait_for_service('rupert/controller_manager/switch_controller')
 	controllers = ['joint_state_controller','/rupert/joint1_position_controller','/rupert/joint2_position_controller','/rupert/joint3_position_controller','/rupert/joint4_position_controller','/rupert/joint5_position_controller','/rupert/joint6_position_controller','/rupert/joint7_position_controller','/rupert/joint8_position_controller','/rupert/joint9_position_controller','/rupert/joint10_position_controller','/rupert/joint11_position_controller','/rupert/joint12_position_controller']
-	switch_controller([],controllers,2)
+	switch_controller(start_controllers = [], stop_controllers = controllers, strictness = 2)
 	for i in controllers:
 		unload_controller(i)
 		#print("unloaded:"+str(i))
@@ -510,10 +515,10 @@ if __name__=='__main__':
 	unload_controller = rospy.ServiceProxy('rupert/controller_manager/unload_controller', UnloadController)
 	load_controller = rospy.ServiceProxy('rupert/controller_manager/load_controller', LoadController)
 	switch_controller = rospy.ServiceProxy('rupert/controller_manager/switch_controller', SwitchController)
-		
-	p = os.popen("rosrun xacro xacro.py " + "~/catkin_ws/src/rupert_learns/urdf/rupert.xacro")
-	xml_string = p.read()
-	p.close()
+	
+	# p = os.popen("rosrun xacro xacro.py " + "~/catkin_ws/src/rupert_learns/urdf/rupert.xacro")
+	# xml_string = p.read()
+	# p.close()
 	
 	if (bias == True):
 		bias_div = 8.0
