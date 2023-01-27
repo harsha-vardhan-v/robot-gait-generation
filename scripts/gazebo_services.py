@@ -3,12 +3,31 @@
 import rospy
 from controller_manager_msgs.srv import LoadController, UnloadController, SwitchController
 from gazebo_msgs.srv import DeleteModel, SpawnModel
+from geometry_msgs.msg import Pose
 
 switch_controller = rospy.ServiceProxy('rupert/controller_manager/switch_controller', SwitchController)
 load_controller = rospy.ServiceProxy('rupert/controller_manager/load_controller', LoadController)
 unload_controller = rospy.ServiceProxy('rupert/controller_manager/unload_controller', UnloadController)
-spawn_model = rospy.ServiceProxy("gazebo/spawn_urdf_model", SpawnModel)
-delete_model = rospy.ServiceProxy("gazebo/delete_model", DeleteModel)
+
+def call_spawn_model(model_name: str, model_xml: str, robot_namespace: str, initial_pose: Pose, reference_frame: str):
+    try:
+        rospy.wait_for_service('/gazebo/delete_model')
+        spawn_model = rospy.ServiceProxy("gazebo/spawn_urdf_model", SpawnModel)
+        spawn_model(model_name, model_xml, robot_namespace, initial_pose, reference_frame)
+        rospy.loginfo(f'Spawned {model_name}')
+
+    except rospy.ServiceException as e:
+        rospy.logwarn(e)
+
+def call_delete_model(model_name: str):
+    try:
+        rospy.wait_for_service('/gazebo/delete_model')
+        delete_model = rospy.ServiceProxy("gazebo/delete_model", DeleteModel)
+        delete_model(model_name)
+        rospy.loginfo(f'Deleted {model_name}')
+
+    except rospy.ServiceException as e:
+        rospy.logwarn(e)
 
 def load_controllers():
     try:
