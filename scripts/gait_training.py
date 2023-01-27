@@ -2,8 +2,10 @@
 
 import rospy
 import random
+import os
 from std_msgs.msg import Float64
-from gazebo_services import unload_controllers, load_controllers, delete_model
+from geometry_msgs.msg import Pose
+from gazebo_services import unload_controllers, load_controllers, spawn_model, delete_model
 
 # Defaults
 population_size = 64
@@ -13,6 +15,10 @@ phased_gait = False
 
 # Structures and constants
 pop = []
+height_count = 1
+height_average = 0
+pitch_average = 0
+roll_average = 0
 
 def create_individual(length):
     individual_string = []
@@ -38,8 +44,56 @@ def create_individual(length):
 def first_population(pop_size, length):
 	global pop
 	for i in range(pop_size):
-		pop.append(create_individual(length))        
+		pop.append(create_individual(length))  
 
+def fitness(individual_given):
+    global height_count
+    global height_average
+    global pitch_average
+    global roll_average
+
+    pose = Pose()
+    pose.position.x = 0
+    pose.position.y = 0
+    pose.position.z = 0.2
+    pose.orientation.x = 0
+    pose.orientation.y = 0
+    pose.orientation.z = 0
+    pose.orientation.w = 1
+
+    knee1.publish(0)
+    knee2.publish(0)
+    knee3.publish(0)
+    knee4.publish(0)
+    ankle1.publish(0)
+    ankle2.publish(0)
+    ankle3.publish(0)
+    ankle4.publish(0)
+    hip1.publish(0)
+    hip2.publish(0)
+    hip3.publish(0)
+    hip4.publish(0)
+
+    # Spawn the model and load controllers
+    p = os.popen('rosrun xacro xacro ' + '~/Desktop/catkin_ws/src/rupert_learns/urdf/rupert.xacro')
+    xml_string = p.read()
+    p.close()
+
+    spawn_model(model_name='rupert',model_xml=xml_string,robot_namespace='',initial_pose=pose,reference_frame='world')
+    load_controllers()
+
+    height_count = 1
+    height_average = 0
+    pitch_average = 0
+    roll_average = 0
+
+    if (phased_gait == True):
+        individual = individual_given[0]
+        offset = individual_given[1]
+    else:
+        individual = individual_given
+   
+    
 
 def main():
     load_controllers()
@@ -48,7 +102,11 @@ def main():
 
     first_population(population_size,length)
     rospy.loginfo(f'Population: {len(pop)} x {len(pop[0])}')
-    
+
+    for i in range(population_size):
+        score, distance_temp, height_temp = fitness(pop[i])
+        break
+
     pass
 
 if __name__ == '__main__':
