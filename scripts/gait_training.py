@@ -3,8 +3,11 @@
 import rospy
 import random
 import os
+import tf
+import math
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose
+from gazebo_msgs.msg import ModelStates
 from gazebo_services import unload_controllers, load_controllers, call_spawn_model, call_delete_model
 
 # Defaults
@@ -18,14 +21,19 @@ hip_position = 0
 
 # Structures and constants
 pop = []
+sco = []
+dis = []
+hei = []
 final_position = 0
 initial_position = 0
 height_count = 1
 height_average = 0
 pitch_average = 0
 roll_average = 0
+ride_height = 0
 rec_count = 0
 unfit = False
+num_unfit = 0
 
 def create_individual(length):
     individual_string = []
@@ -173,10 +181,51 @@ def fitness(individual_given):
         unfit = False
 
     return performance, final_position, height_average
-   
+
+def model_state_callback(data):
+    global height_count
+    global final_position
+    global ride_height
+    global height_average
+    global pitch_average
+    global roll_average
+    global unfit
+
+    try:
+        quaternion = (data.pose[1].orientation.x,data.pose[1].orientation.y,data.pose[1].orientation.z,data.pose[1].orientation.w)
+        euler = tf.transformations.euler_from_quaternion(quaternion)
+        roll = math.sqrt(euler[0]*euler[0])
+        pitch = math.sqrt(euler[1]*euler[1])
+        yaw = math.sqrt(euler[2]*euler[2])
+
+        if roll>0.785398 or pitch>0.785398:
+            rospy.loginfo('Flipped')
+            unfit = True
+        
+        height_count += 1
+        ride_height = data.pose[1].position.z
+        pitch_average += pitch
+        roll_average += roll
+        height_average += ride_height
+        final_position = math.sqrt(((data.pose[1].position.x)*(data.pose[1].position.x)))
+
+    except:
+        pass
+
     
 
 def main():
+    global pop
+    global sco
+    global dis
+    global hei
+    global num_unfit
+
+    pop = []
+    sco = []
+    dis = []
+    hei = []
+
     load_controllers()
     unload_controllers()
     call_delete_model('rupert')
@@ -184,10 +233,26 @@ def main():
     first_population(population_size,length)
     rospy.loginfo(f'Population: {len(pop)} x {len(pop[0])}')
 
+    # Evaluating population fitness and replacing unfit individuals
     for i in range(population_size):
         score, distance_temp, height_temp = fitness(pop[i])
-        rospy.loginfo(f'Score: {score}')
-        break
+        
+        while score == -1000:
+            num_unfit += 1
+            pop[i] = create_individual(length)
+            score, distance_temp, height_temp = fitness(pop[i])
+            rospy.loginfo('Replacing pop 0 individual')
+
+        rospy.loginfo(f'Individual {i}: {score}')
+        sco.append(score)
+        dis.append(distance_temp)
+        hei.append(height_temp)
+
+    rospy.loginfo(f'Sco: {sco}')
+    rospy.loginfo(f'Dis: {dis}')
+    rospy.loginfo(f'Hei: {hei}')
+
+
 
     pass
 
@@ -220,6 +285,9 @@ if __name__ == '__main__':
     ankle4 = rospy.Publisher('/rupert/joint12_position_controller/command', Float64, queue_size=1)
     
     rospy.loginfo('Created publishers')
+
+    rospy.Subscriber('/gazebo/model_states', ModelStates, model_state_callback)
+    rospy.loginfo('Created subscribers')
 
     # switch_controller = rospy.ServiceProxy('rupert/controller_manager/switch_controller', SwitchController)
     # load_controller = rospy.ServiceProxy('rupert/controller_manager/load_controller', LoadController)
