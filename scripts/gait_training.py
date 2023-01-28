@@ -5,16 +5,19 @@ import random
 import os
 import tf
 import math
+import numpy as np
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose
 from gazebo_msgs.msg import ModelStates
 from gazebo_services import unload_controllers, load_controllers, call_spawn_model, call_delete_model
 
 # Defaults
-population_size = 64
+population_size = 5
 length = 128
 limit = 1.6
 bias = True
+probabilistic_cull = True
+generations = 150
 phased_gait = False
 static_hip = True
 hip_position = 0
@@ -24,6 +27,7 @@ pop = []
 sco = []
 dis = []
 hei = []
+surv = []
 final_position = 0
 initial_position = 0
 height_count = 1
@@ -32,6 +36,7 @@ pitch_average = 0
 roll_average = 0
 ride_height = 0
 rec_count = 0
+unfit_count = []
 unfit = False
 num_unfit = 0
 
@@ -182,6 +187,57 @@ def fitness(individual_given):
 
     return performance, final_position, height_average
 
+def best_n(n, scores):
+    global surv
+    global sco
+    global hei
+    global dis
+    global pop
+
+    hei2 = hei
+    dis2 = dis
+
+    surv = []
+    sco = []
+    hei = []
+    dis = []
+
+    for i in range(n):
+        if (probabilistic_cull == True):
+            weighted_random = []
+            mid = np.mean(scores)
+            minimum = np.min(scores)
+
+            for j in range(population_size-i):
+                weighted_random += ([j] * int(math.ceil((scores[j] - minimum) * 10)))
+
+            print(weighted_random)
+            
+            index = random.choice(weighted_random)
+            surv.append(pop[index])
+            sco.append(scores[index])
+            hei.append(hei2[index])
+            dis.append(dis2[index])
+
+            pop.pop(index)
+            scores = np.delete(scores, index)
+            hei2.pop(index)
+            dis2.pop(index)
+
+        else:
+            index = np.argmax(scores)
+            surv.append(pop[index])
+            sco.append(scores[index])
+            hei.append(hei2[index])
+            dis.append(dis2[index])
+
+            pop.pop(index)
+            scores = np.delete(scores, index)
+            hei2.pop(index)
+            dis2.pop(index)
+
+    pop = surv
+
 def model_state_callback(data):
     global height_count
     global final_position
@@ -210,9 +266,7 @@ def model_state_callback(data):
         final_position = math.sqrt(((data.pose[1].position.x)*(data.pose[1].position.x)))
 
     except:
-        pass
-
-    
+        pass  
 
 def main():
     global pop
@@ -220,11 +274,14 @@ def main():
     global dis
     global hei
     global num_unfit
+    global unfit_count
 
     pop = []
     sco = []
     dis = []
     hei = []
+
+    generation = 0
 
     load_controllers()
     unload_controllers()
@@ -252,6 +309,18 @@ def main():
     rospy.loginfo(f'Dis: {dis}')
     rospy.loginfo(f'Hei: {hei}')
 
+    fit = np.array(sco)
+    height_arr = np.array(hei)
+    dist_arr = np.array(dis)
+
+    unfit_count.append(num_unfit)
+    num_unfit = 0
+
+    while(generation<generations):
+        generation += 1
+        rospy.loginfo(f'Generation: {generation}')
+
+        best_n(population_size//2, fit)
 
 
     pass
