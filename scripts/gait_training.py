@@ -12,7 +12,7 @@ from gazebo_msgs.msg import ModelStates
 from gazebo_services import unload_controllers, load_controllers, call_spawn_model, call_delete_model
 
 # Defaults
-population_size = 5
+population_size = 4
 length = 128
 limit = 1.6
 bias = True
@@ -21,6 +21,7 @@ generations = 150
 phased_gait = False
 static_hip = True
 hip_position = 0
+switch_mutation_gen = 100
 
 # Structures and constants
 pop = []
@@ -210,8 +211,6 @@ def best_n(n, scores):
 
             for j in range(population_size-i):
                 weighted_random += ([j] * int(math.ceil((scores[j] - minimum) * 10)))
-
-            print(weighted_random)
             
             index = random.choice(weighted_random)
             surv.append(pop[index])
@@ -266,7 +265,69 @@ def model_state_callback(data):
         final_position = math.sqrt(((data.pose[1].position.x)*(data.pose[1].position.x)))
 
     except:
-        pass  
+        pass
+
+def mate(individual1, individual2):
+    if (phased_gait == True):
+        individual1_string = individual1[0]
+        individual2_string = individual2[0]
+        individual1_offset = individual1[1]
+        individual2_offset = individual2[1]
+
+        index = random.randint(0, len(individual1_string)-1)
+        index2 = random.randint(0, 3)
+
+        child1_string = individual1_string[:index]+individual2_string[index:]
+        child2_string = individual2_string[:index]+individual1_string[index:]
+        child1_offset = individual1_offset[:index2]+individual2_offset[index2:]
+        child2_offset = individual2_offset[:index2]+individual1_offset[index2:]
+        child1 = [child1_string,child1_offset]
+        child2 = [child2_string,child2_offset]
+    
+    else:
+        index = random.randint(0, len(individual1)-1)
+        child1 = individual1[:index]+individual2[index:]
+        child2 = individual2[:index]+individual1[index:]
+
+    return child1, child2
+
+def mutate(radiation1, radiation2):
+    global pop
+    global sco
+    global hei
+    global dis
+
+    for i in range(int(radiation1*(population_size))):
+        new_offsets = []
+        index = random.randint(0,(population_size-1))
+
+        for j in range(int(radiation2*length)):
+            index2 = random.randint(0,length-1)
+
+            if j == 0:
+                if(phased_gait == True):
+                    specimen = pop[index][0]
+                else:
+                    specimen = pop[index]
+            else:
+                specimen = new_specimen
+
+            begin = specimen[:index2]
+            end = specimen[index2+1:]
+            if(bias==True):
+                begin.append(random.randint(-8, 4))
+            else:
+                begin.append(random.randint(-6, 6))
+            new_specimen = begin + end
+        
+        if (phased_gait == True):
+            for k in range(3):
+                new_offsets.append(random.randint(0, length))
+            new_specimen = [specimen,new_offsets]
+
+        pop[index] = new_specimen
+        sco[index],dis[index],hei[index] = fitness(pop[index])
+
 
 def main():
     global pop
@@ -319,8 +380,47 @@ def main():
     while(generation<generations):
         generation += 1
         rospy.loginfo(f'Generation: {generation}')
+        rospy.loginfo(f'pop: {pop}')
 
         best_n(population_size//2, fit)
+
+        for j in range(len(pop)):
+            if(j%2==0):
+                partner1 = random.randint(0, len(pop)-1)
+                partner2 = random.randint(0, len(pop)-1)
+
+                child1, child2 = mate(pop[partner1], pop[partner2])
+                
+                fitness_temp, distance_temp, height_temp = fitness(child1)
+                while(fitness_temp == -1000):
+                    num_unfit = num_unfit + 1
+                    child1 = create_individual(length)
+                    fitness_temp, distance_temp, height_temp = fitness(child1)
+                    rospy.loginfo('Replacing child1')
+                pop.append(child1)
+                sco.append(fitness_temp)
+                hei.append(height_temp)
+                dis.append(distance_temp)
+                rospy.loginfo(f'individual {j}: {sco[-1]}')
+
+                fitness_temp, distance_temp, height_temp = fitness(child2)
+                while(fitness_temp == -1000):
+                    num_unfit = num_unfit + 1
+                    child2 = create_individual(length)
+                    fitness_temp, distance_temp, height_temp = fitness(child2)
+                    rospy.loginfo('Replacing child2')
+                pop.append(child2)
+                sco.append(fitness_temp)
+                hei.append(height_temp)
+                dis.append(distance_temp)
+                rospy.loginfo(f'individual {j+1}: {sco[-1]}')
+
+        if generation<switch_mutation_gen:
+            mutate(0.3,0.5)
+        else:
+            mutate(0.2,0.3)
+
+        rospy.loginfo('Mutated')
 
 
     pass
