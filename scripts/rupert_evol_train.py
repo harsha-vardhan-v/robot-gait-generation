@@ -440,7 +440,7 @@ def main():
 		file.write(str(pop[i]))
 		file.write("\n \n")
 	rospy.loginfo("Done")
-	file.close() 
+	file.close()
 	file = open("evolution_1_fitness.txt","w") 
 	for i in range(len(running_fitness)):
 		file.write(str(running_fitness[i])+",") 
@@ -450,7 +450,7 @@ def main():
 	file.write(str(running_dist)+"\n")
 	file.write(str(running_height)+"\n")
 	rospy.loginfo("Done")
-	file.close() 
+	file.close()
 
 
 # running_total = 0

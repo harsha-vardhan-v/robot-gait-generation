@@ -22,6 +22,8 @@ phased_gait = False
 static_hip = True
 hip_position = 0
 switch_mutation_gen = 100
+# result_path = os.path.expanduser('~/Desktop/catkin_ws/src/rupert_learns/results')
+result_path = ''
 
 # Structures and constants
 pop = []
@@ -342,6 +344,10 @@ def main():
     dis = []
     hei = []
 
+    running_fitness = []
+    running_height = []
+    running_dist = []
+
     generation = 0
 
     load_controllers()
@@ -421,7 +427,55 @@ def main():
             mutate(0.2,0.3)
 
         rospy.loginfo('Mutated')
+        unfit_count.append(num_unfit)
+        num_unfit = 0
 
+        fit = np.array(sco)
+        height_arr = np.array(hei)
+        dist_arr = np.array(dis)
+
+        running_fitness.append(np.max(fit))
+        running_height.append(np.max(height_arr))
+        running_dist.append(np.max(dist_arr))
+
+        file = open(os.path.join(result_path, f'evolution_1_gen{generation}.txt'),'w') 
+        for i in range(len(pop)):
+            file.write(str(sco[i])+": ")
+            file.write(str(pop[i]))
+            file.write("\n \n")
+        file.close()
+        rospy.loginfo(f'Created "evolution_1_gen"+{generation}+" file')
+
+        file = open(os.path.join(result_path, 'evolution_invalids.txt'),'w')
+        file.write(str(unfit_count))
+        file.close()
+
+        file = open(os.path.join(result_path, 'evolution_1_fitness.txt'),'w')
+        for i in range(len(running_fitness)):
+            file.write(str(running_fitness[i])+",")
+        file.close()
+
+    file = open(os.path.join(result_path, 'evolution_1_genf.txt'),'w')
+    index_best = np.argmax(fit)
+    for i in range(len(pop)):
+        file.write(str(sco[i])+": ") 
+        file.write(str(pop[i]))
+        file.write("\n \n")
+    file.close()
+
+    rospy.loginfo('Done')
+
+    file = open(os.path.join(result_path, 'evolution_1_fitness.txt'),'w') 
+    for i in range(len(running_fitness)):
+        file.write(str(running_fitness[i])+",") 
+    file.close()
+    rospy.loginfo('Done')
+
+    file = open(os.path.join(result_path, 'evolution_1_breakdown.txt'),'w') 
+    file.write(str(running_dist)+"\n")
+    file.write(str(running_height)+"\n")
+    file.close()
+    rospy.loginfo('Done')
 
     pass
 
