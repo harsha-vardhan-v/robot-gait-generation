@@ -45,7 +45,29 @@ def main():
     hip3.publish(0)
     hip4.publish(0)
 
-    rospy.loginfo('START')
+    rospy.loginfo('START WALKING')
+
+    for j in range(20):
+        for i in range(0, len(best), 8):
+            if(i%8==0):
+                hip1.publish(0)
+                hip2.publish(0)
+                hip3.publish(0)
+                hip4.publish(0)
+
+                knee1.publish((best[i]/8.0)*limit)
+                knee2.publish((best[i+1]/8.0)*limit)
+                knee3.publish((best[i+2]/8.0)*limit)
+                knee4.publish((best[i+3]/8.0)*limit)
+                ankle1.publish((best[i+4]/8.0)*limit)
+                ankle2.publish((best[i+5]/8.0)*limit)
+                ankle3.publish((best[i+6]/8.0)*limit)
+                ankle4.publish((best[i+7]/8.0)*limit)
+
+                rospy.sleep(1.2)
+
+    performance = final_position
+
 
 if __name__=='__main__':
     rospy.init_node('best_coordinate_walk')

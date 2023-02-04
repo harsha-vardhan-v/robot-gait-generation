@@ -12,7 +12,7 @@ from gazebo_msgs.msg import ModelStates
 from gazebo_services import unload_controllers, load_controllers, call_spawn_model, call_delete_model
 
 # Defaults
-population_size = 4
+population_size = 64
 length = 128
 limit = 1.6
 bias = True
@@ -386,7 +386,6 @@ def main():
     while(generation<generations):
         generation += 1
         rospy.loginfo(f'Generation: {generation}')
-        rospy.loginfo(f'pop: {pop}')
 
         best_n(population_size//2, fit)
 
