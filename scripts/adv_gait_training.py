@@ -21,12 +21,12 @@ except ImportError:
     from collections import Sequence
 
 # Defaults
-population_size = 64
+population_size = 4
 length = 128
 limit = 1.6
 bias = True
 probabilistic_cull = True
-generations = 150
+generations = 2
 phased_gait = False
 static_hip = True
 hip_position = 0
@@ -87,13 +87,15 @@ def mutGaussian(individual, mu, sigma, indpb):
 
     return individual
 
-def create_individual():
-    return mutGaussian(best, best, best, 0.4)
+def create_gaussian_individual(individual):
+    return mutGaussian(individual, individual, individual, 0.2)
 
 def first_population(pop_size):
-	global pop
-	for i in range(pop_size):
-		pop.append(create_individual())
+    global best
+    global pop
+
+    for i in range(pop_size):
+        pop.append(create_gaussian_individual(best))
                 
 def fitness(individual_given):
     global height_count
@@ -190,6 +192,25 @@ def fitness(individual_given):
 
     return performance, final_position, height_average
 
+def best_two(break_point, scores):
+    index1 = np.argmax(scores[:break_point])
+    index2 = np.argmax(scores[break_point:]) + break_point
+
+    rospy.loginfo(f'Breakpoint: {break_point}, index1: {index1}, index2: {index2}')
+
+    return ([pop[index1], pop[index2]], [scores[index1], scores[index2]])
+
+def two_point_crossover(individual1, individual2):
+    child1 = individual1
+    child2 = individual2
+
+    for i in range(2):
+        index = random.randint(0, len(individual1)-1)
+        child1 = child1[:index]+child2[index:]
+        child2 = child2[:index]+child1[index:]
+
+    return child1, child2
+
 def model_state_callback(data):
     global height_count
     global final_position
@@ -211,14 +232,14 @@ def model_state_callback(data):
             rospy.loginfo('Flipped')
             unfit = True
 
-        if (data.pose[1].position.x - prev_pos < 0):
-            negative_step_count += 1
+        # if (data.pose[1].position.x - prev_pos < 0):
+        #     negative_step_count += 1
 
-        prev_pos = data.pose[1].position.x
+        # prev_pos = data.pose[1].position.x
 
-        if negative_step_count > 2:
-            negative_step_count = 0
-            unfit = True
+        # if negative_step_count > 2:
+        #     negative_step_count = 0
+        #     unfit = True
         
         height_count += 1
         ride_height = data.pose[1].position.z
@@ -262,7 +283,7 @@ def main():
         
         while score == -1000:
             num_unfit += 1
-            pop[i] = create_individual(length)
+            pop[i] = create_gaussian_individual(best)
             score, distance_temp, height_temp = fitness(pop[i])
             rospy.loginfo('Replacing pop 0 individual')
 
@@ -270,6 +291,79 @@ def main():
         sco.append(score)
         dis.append(distance_temp)
         hei.append(height_temp)
+
+    rospy.loginfo(f'Sco: {sco}')
+    rospy.loginfo(f'Dis: {dis}')
+    rospy.loginfo(f'Hei: {hei}')
+
+    fit = np.array(sco)
+    height_arr = np.array(hei)
+    dist_arr = np.array(dis)
+
+    unfit_count.append(num_unfit)
+    num_unfit = 0
+
+    while(generation<generations):
+        generation += 1
+        rospy.loginfo(f'Generation: {generation}')
+
+        [individual1, individual2], [p_score1, p_score2] = best_two(population_size//2, fit)
+        rospy.loginfo(f'Parent scores: {p_score1}, {p_score2}')
+
+        strong_parent = individual1 if p_score1 > p_score2 else individual2
+
+        pop = []
+        sco = []
+        dis = []
+        hei = []
+
+        for i in range(0, population_size):
+            choice = random.choice([0,1])
+
+            # Guassian mutation of a parent
+            if choice == 0:
+                rospy.loginfo('Guassian mutation of parent')
+                child = mutGaussian(strong_parent, strong_parent, i, 0.4)
+
+                fitness_temp, distance_temp, height_temp = fitness(child)
+                while(fitness_temp == -1000):
+                    num_unfit = num_unfit + 1
+                    child = create_gaussian_individual(best)
+                    fitness_temp, distance_temp, height_temp = fitness(child)
+                    rospy.loginfo('Replacing child1')
+
+                pop.append(child)
+                sco.append(fitness_temp)
+                hei.append(height_temp)
+                dis.append(distance_temp)
+            
+            # Two point crossover
+            else:
+                rospy.loginfo('Two point crossover')
+                child1, child2 = two_point_crossover(individual1, individual2)
+
+                fitness_temp, distance_temp, height_temp = fitness(child1)
+                fitness_temp1, distance_temp1, height_temp1 = fitness(child2)
+
+                if fitness_temp > fitness_temp1:
+                    pop.append(child1)
+                    sco.append(fitness_temp)
+                    hei.append(height_temp)
+                    dis.append(distance_temp)
+
+                else:
+                    pop.append(child2)
+                    sco.append(fitness_temp1)
+                    hei.append(height_temp1)
+                    dis.append(distance_temp1)
+
+            rospy.loginfo(f'individual {i}: {sco[-1]}')
+                    
+
+
+
+        rospy.loginfo('Mutated')
+        
 
 if __name__ == '__main__':
     rospy.init_node('gait_training')
