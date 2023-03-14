@@ -21,12 +21,12 @@ except ImportError:
     from collections import Sequence
 
 # Defaults
-population_size = 4
+population_size = 64
 length = 128
 limit = 1.6
 bias = True
 probabilistic_cull = True
-generations = 2
+generations = 150
 phased_gait = False
 static_hip = True
 hip_position = 0
@@ -358,11 +358,61 @@ def main():
                     dis.append(distance_temp1)
 
             rospy.loginfo(f'individual {i}: {sco[-1]}')
-                    
-
-
 
         rospy.loginfo('Mutated')
+        unfit_count.append(num_unfit)
+        num_unfit = 0
+
+        fit = np.array(sco)
+        height_arr = np.array(hei)
+        dist_arr = np.array(dis)
+
+        unfit_count.append(num_unfit)
+        num_unfit = 0
+
+        running_fitness.append(np.max(fit))
+        running_height.append(np.max(height_arr))
+        running_dist.append(np.max(dist_arr))
+
+        file = open(os.path.join(result_path, f'adv_evolution_1_gen{generation}.txt'),'w') 
+        for i in range(len(pop)):
+            file.write(str(sco[i])+": ")
+            file.write(str(pop[i]))
+            file.write("\n \n")
+        file.close()
+        rospy.loginfo(f'Created "adv_evolution_1_gen"+{generation}+" file')
+
+        file = open(os.path.join(result_path, 'adv_evolution_invalids.txt'),'w')
+        file.write(str(unfit_count))
+        file.close()
+
+        file = open(os.path.join(result_path, 'adv_evolution_1_fitness.txt'),'w')
+        for i in range(len(running_fitness)):
+            file.write(str(running_fitness[i])+",")
+        file.close()
+
+    file = open(os.path.join(result_path, 'adv_evolution_1_genf.txt'),'w')
+    index_best = np.argmax(fit)
+    for i in range(len(pop)):
+        file.write(str(sco[i])+": ") 
+        file.write(str(pop[i]))
+        file.write("\n \n")
+    file.close()
+
+    rospy.loginfo('Done')
+
+    file = open(os.path.join(result_path, 'adv_evolution_1_fitness.txt'),'w') 
+    for i in range(len(running_fitness)):
+        file.write(str(running_fitness[i])+",") 
+    file.close()
+    rospy.loginfo('Done')
+
+    file = open(os.path.join(result_path, 'adv_evolution_1_breakdown.txt'),'w') 
+    file.write(str(running_dist)+"\n")
+    file.write(str(running_height)+"\n")
+    file.close()
+    rospy.loginfo('Done')
+
         
 
 if __name__ == '__main__':
