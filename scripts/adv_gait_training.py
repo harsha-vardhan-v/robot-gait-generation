@@ -51,7 +51,7 @@ rec_count = 0
 unfit_count = []
 unfit = False
 num_unfit = 0
-negative_step_count = 0
+final_disp = 0
 prev_pos = 0
 best = [-3, -3, 4, 5, -4, 3, -3, 1, -5, 4, 2, 0, -4, 1, -5, 6, 4, -4, -2, -3, 5, -4, -3, -6, -3, 6, -1, -2, -3, 3, 1, 3, -3, -3, -6, 5, 3, 3, -1, -1, 5, 0, -3, -6, 1, 2, -5, -5, -3, 2, 4, -2, 1, -2, 4, 2, -2, 6, -2, 5, -6, -6, 1, -5, 5, -5, -6, -1, -2, -1, -6, -2, 5, 2, 5, 3, -6, 1, -1, 4, -4, 3, -4, -1, -6, 1, -2, 4, 6, -4, 0, -3, 4, -2, -2, -5, -4, -2, -1, -4, 6, 2, -1, 0, 0, 1, 0, -1, -6, -1, -3, -6, 3, 1, -2, 2, -4, -6, 4, 0, 2, -4, -4, 6, -1, 3, -6, -1]
 
@@ -88,7 +88,7 @@ def mutGaussian(individual, mu, sigma, indpb):
     return individual
 
 def create_gaussian_individual(individual):
-    return mutGaussian(individual, individual, individual, 0.2)
+    return mutGaussian(individual, individual, 0.5, 0.25)
 
 def first_population(pop_size):
     global best
@@ -143,6 +143,7 @@ def fitness(individual_given):
     
     individual = individual_given
 
+    initial_time = rospy.get_rostime()
     for i in range(len(individual)):
         if (static_hip == True):
             wrap = 8
@@ -179,14 +180,17 @@ def fitness(individual_given):
             ankle2.publish(((individual[i+hip_offset+5])/bias_div)*limit)
             ankle3.publish(((individual[i+hip_offset+6])/bias_div)*limit)
             ankle4.publish(((individual[i+hip_offset+7])/bias_div)*limit)
+
         
         rospy.sleep(0.2)
 
-    performance = final_position - initial_position + height_average/height_count - roll_average/height_count - pitch_average/height_count
+    final_time = rospy.get_rostime()
+
+    performance = (final_position - initial_position) / (final_time.secs - initial_time.secs) + height_average/height_count - roll_average/height_count - pitch_average/height_count
     unload_controllers()
     call_delete_model('rupert')
 
-    if (unfit == True):
+    if (unfit == True or final_disp < 0):
         performance = -1000
         unfit = False
 
@@ -219,7 +223,7 @@ def model_state_callback(data):
     global pitch_average
     global roll_average
     global unfit
-    global negative_step_count
+    global final_disp
 
     try:
         quaternion = (data.pose[1].orientation.x,data.pose[1].orientation.y,data.pose[1].orientation.z,data.pose[1].orientation.w)
@@ -231,15 +235,6 @@ def model_state_callback(data):
         if roll>0.785398 or pitch>0.785398:
             rospy.loginfo('Flipped')
             unfit = True
-
-        # if (data.pose[1].position.x - prev_pos < 0):
-        #     negative_step_count += 1
-
-        # prev_pos = data.pose[1].position.x
-
-        # if negative_step_count > 2:
-        #     negative_step_count = 0
-        #     unfit = True
         
         height_count += 1
         ride_height = data.pose[1].position.z
@@ -247,6 +242,7 @@ def model_state_callback(data):
         roll_average += roll
         height_average += ride_height
         final_position = math.sqrt(((data.pose[1].position.x)*(data.pose[1].position.x)))
+        final_disp = data.pose[1].position.x
 
 
     except:
@@ -317,7 +313,8 @@ def main():
         dis = []
         hei = []
 
-        for i in range(0, population_size):
+        i=0
+        while i < population_size:
             choice = random.choice([0,1])
 
             # Guassian mutation of a parent
@@ -326,11 +323,12 @@ def main():
                 child = mutGaussian(strong_parent, strong_parent, i, 0.4)
 
                 fitness_temp, distance_temp, height_temp = fitness(child)
-                while(fitness_temp == -1000):
+                if (fitness_temp == -1000):
                     num_unfit = num_unfit + 1
-                    child = create_gaussian_individual(best)
-                    fitness_temp, distance_temp, height_temp = fitness(child)
-                    rospy.loginfo('Replacing child1')
+                    # child = mutGaussian(best, best, 0, 0.4)
+                    # fitness_temp, distance_temp, height_temp = fitness(child)
+                    rospy.loginfo('Replacing child')
+                    continue
 
                 pop.append(child)
                 sco.append(fitness_temp)
@@ -345,7 +343,19 @@ def main():
                 fitness_temp, distance_temp, height_temp = fitness(child1)
                 fitness_temp1, distance_temp1, height_temp1 = fitness(child2)
 
-                if fitness_temp > fitness_temp1:
+                if fitness_temp == -1000 and fitness_temp1 == -1000:
+                    num_unfit = num_unfit + 1
+                    # child = mutGaussian(best, best, 0, 0.4)
+                    # fitness_temp, distance_temp, height_temp = fitness(child)
+                    rospy.loginfo('Replacing child')
+
+                    # pop.append(child)
+                    # sco.append(fitness_temp)
+                    # hei.append(height_temp)
+                    # dis.append(distance_temp)
+                    continue
+
+                elif fitness_temp > fitness_temp1:
                     pop.append(child1)
                     sco.append(fitness_temp)
                     hei.append(height_temp)
@@ -358,6 +368,7 @@ def main():
                     dis.append(distance_temp1)
 
             rospy.loginfo(f'individual {i}: {sco[-1]}')
+            i += 1
 
         rospy.loginfo('Mutated')
         unfit_count.append(num_unfit)
