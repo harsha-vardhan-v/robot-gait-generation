@@ -1,10 +1,10 @@
 <launch>
 <!-- these are the arguments you can pass this launch file, for example paused:=true -->
-  <arg name="paused" default="false"/>
-  <arg name="use_sim_time" default="true"/>
+  <!-- <arg name="paused" default="false"/> -->
+  <!-- <arg name="use_sim_time" default="true"/> -->
   <arg name="gui" default="true"/>
-  <arg name="headless" default="false"/>
-  <arg name="debug" default="false"/>
+  <!-- <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/> -->
   <arg name ="world_name" default="terrain_1"/>
    
    <!-- Robot pose -->
@@ -16,7 +16,17 @@
   <arg name="yaw" default="0"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-  <arg name="world_name" value="$(find gazebo_terrain_tutorial)/worlds/$(arg world_name).world"/>
+
+
+  <!-- <include file="$(find hector_gazebo_worlds)/launch/start.launch">
+   <arg name="world" value="$(find hector_gazebo_worlds)/worlds/rolling_landscape_120m.world"/> -->
+
+   <!-- <include file="$(find hector_gazebo_worlds)/launch/start.launch">
+   <arg name="world" value="$(find hector_gazebo_worlds)/worlds/willow_garage.world"/>  -->
+
+
+  
+   <arg name="world_name" value="$(find gazebo_terrain_tutorial)/worlds/$(arg world_name).world"/>
 
   
   
@@ -25,11 +35,11 @@
 
 
 
-    <arg name="debug" value="$(arg debug)" />
+    <!-- <arg name="debug" value="$(arg debug)" /> -->
     <arg name="gui" value="$(arg gui)" />
-    <arg name="paused" value="$(arg paused)"/>
+    <!-- <arg name="paused" value="$(arg paused)"/>
     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
-    <arg name="headless" value="$(arg headless)"/>
+    <arg name="headless" value="$(arg headless)"/> -->
   </include>
   
    <!-- Load the URDF into the ROS Parameter Server -->
@@ -60,7 +70,7 @@
 
   <!-- send fake joint values -->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
-    <param name="use_gui" value="TRUE"/>
+    <param name="use_gui" value="FALSE"/>
   </node>
 
   <!-- Show in Rviz   -->

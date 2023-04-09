@@ -115,8 +115,8 @@
   <!-- hokuyo -->
   <gazebo reference="hokuyo_link">
     <sensor type="ray" name="head_hokuyo_sensor">
-      <pose>0 0 0 0 0 0</pose>
-      <visualize>false</visualize>
+      <pose>2 2 1 1 2 2</pose>
+      <visualize>true</visualize>
       <update_rate>40</update_rate>
       <ray>
         <scan>
@@ -152,6 +152,8 @@
   <!-- camera -->
   <gazebo reference="camera_link">
     <sensor type="camera" name="camera1">
+    <pose>4 4 2 2 4 4</pose>
+      <visualize>true</visualize>
       <update_rate>30.0</update_rate>
       <camera name="head">
         <horizontal_fov>1.3962634</horizontal_fov>

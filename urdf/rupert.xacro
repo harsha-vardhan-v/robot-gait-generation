@@ -47,6 +47,8 @@
   <xacro:include filename="$(find rupert_learns)/urdf/rupert.gazebo" />
   <!-- Import Rviz colors -->
   <xacro:include filename="$(find rupert_learns)/urdf/materials.xacro" />
+   <xacro:include filename="inertial_macros.xacro"/>
+  <xacro:include filename="$(find rupert_learns)/urdf/lidar.xacro" />
 
   <!-- Used for fixing robot to Gazebo 'base_link' -->
 
