@@ -134,4 +134,6 @@ if __name__=='__main__':
 
     rospy.loginfo('Created subscribers')
 
+    sub = rospy.Subscriber('/rrbot/laser/scan' , LaserScan , callback_laser)
+
     main()
