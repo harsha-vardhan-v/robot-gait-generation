@@ -131,7 +131,6 @@ if __name__=='__main__':
     rospy.loginfo('Created publishers')
 
     rospy.Subscriber('/gazebo/model_states', ModelStates, final_position_callback)
-    rospy.Subscriber("/rrbot/laser/scan", LaserScan, callback_laser)
 
     rospy.loginfo('Created subscribers')
 
