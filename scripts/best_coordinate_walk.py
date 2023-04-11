@@ -31,6 +31,8 @@ best = [-4.654723303710468, 4.8251799983328665, -4.366320315940461, -2.305753368
 
 # best = [-5, 2, -2, 1, 2, 1, -5, -4, 0, -3, -2, -4, -3, -2, -8, 0, -8, -7, -6, -3, -7, -3, -6, -2, 3, 1, 3, -5, -6, -7, 2, -8, 2, 0, 1, -1, 3, 0, -8, -6, -7, -8, -5, 1, 2, -5, -3, -2, -8, 4, -1, 3, -6, -3, -5, -2, 0, 3, 1, 1, -1, -7, -6, -5, 3, 2, 3, 4, -2, -2, -4, -5, -1, -2, 3, -7, 2, 1, -4, 4, -3, -7, -6, 3, 3, -2, -1, -4, -8, -3, 0, 3, -3, -8, -8, 0, -4, -2, 2, -8, 1, -7, 1, -5, -6, -7, -5, 0, -2, -2, -2, -3, -2, -7, -4, -1, 2, 2, -5, 2, -7, -1, 0, -6, 4, -1, -5, -8]
 limit = 1.6
+obstacle_direction = None
+
 
 def final_position_callback(data):
     try:
@@ -40,23 +42,36 @@ def final_position_callback(data):
         pass
 
 def callback_laser(msg):
+    global obstacle_direction
     ranges = list(msg.ranges)
 
     # Find closest object within a certain range
-    min_range = 0.5  # meters
-    max_range = 5.0  # meters
+    min_range = 0.2  # meters
+    max_range = 2.0  # meters
     closest_object = None
     for i in range(len(ranges)):
-        if min_range <= ranges[i] <= max_range:
-            if closest_object is None or ranges[i] < closest_object[1]:
-                closest_object = (i, ranges[i])
+            if min_range <= ranges[i] <= max_range:
+                if closest_object is None or ranges[i] < closest_object[1]:
+                    closest_object = (i, ranges[i])
 
-    if closest_object is not None:
-        # Object detected within range
-        print("Object detected at index {}, distance {}".format(closest_object[0], closest_object[1]))
+    if closest_object is not None and closest_object[1] <= 0.5:
+            # Object detected within range
+        print(f'Object detected at index {closest_object[0]}, distance {closest_object[1]}')
+
+        if closest_object[0] < len(ranges) / 2:
+            #Object is left, turn right
+            print('Left')
+            obstacle_direction = 'l'
+
+        else:
+            #Object is right, turn left
+            print('Right')
+            obstacle_direction = 'r'
+    
     else:
-        # No objects detected within range
-        print("No objects detected")
+        obstacle_direction = None
+
+    
 
 def main():
     unload_controllers()
@@ -87,22 +102,59 @@ def main():
 
     for j in range(120):
         for i in range(0, len(best), 8):
-            if(i%8==0):
-                hip1.publish(0)
-                hip2.publish(0)
-                hip3.publish(0)
-                hip4.publish(0)
+            if obstacle_direction is None:
+                if(i%8==0):
+                    hip1.publish(0)
+                    hip2.publish(0)
+                    hip3.publish(0)
+                    hip4.publish(0)
 
-                knee1.publish((best[i]/8.0)*limit)
-                knee2.publish((best[i+1]/8.0)*limit)
-                knee3.publish((best[i+2]/8.0)*limit)
-                knee4.publish((best[i+3]/8.0)*limit)
-                ankle1.publish((best[i+4]/8.0)*limit)
-                ankle2.publish((best[i+5]/8.0)*limit)
-                ankle3.publish((best[i+6]/8.0)*limit)
-                ankle4.publish((best[i+7]/8.0)*limit)
+                    knee1.publish((best[i]/8.0)*limit)
+                    knee2.publish((best[i+1]/8.0)*limit)
+                    knee3.publish((best[i+2]/8.0)*limit)
+                    knee4.publish((best[i+3]/8.0)*limit)
+                    ankle1.publish((best[i+4]/8.0)*limit)
+                    ankle2.publish((best[i+5]/8.0)*limit)
+                    ankle3.publish((best[i+6]/8.0)*limit)
+                    ankle4.publish((best[i+7]/8.0)*limit)
 
-                rospy.sleep(1.2)
+                    rospy.sleep(1.2)
+
+            elif obstacle_direction == 'l':
+                if(i%8==0):
+                    hip1.publish(0)
+                    hip2.publish(0)
+                    hip3.publish(0)
+                    hip4.publish(0)
+
+                    knee1.publish((best[i]/8.0)*limit)
+                    knee3.publish((best[i+1]/8.0)*limit)
+                    knee4.publish((best[i+2]/8.0)*limit)
+                    knee2.publish((best[i+3]/8.0)*limit)
+                    ankle1.publish((best[i+4]/8.0)*limit)
+                    ankle3.publish((best[i+5]/8.0)*limit)
+                    ankle4.publish((best[i+6]/8.0)*limit)
+                    ankle2.publish((best[i+7]/8.0)*limit)
+
+                    rospy.sleep(1.2)
+
+            elif obstacle_direction == 'r':
+                if(i%8==0):
+                    hip1.publish(0)
+                    hip2.publish(0)
+                    hip3.publish(0)
+                    hip4.publish(0)
+
+                    knee2.publish((best[i]/8.0)*limit)
+                    knee4.publish((best[i+1]/8.0)*limit)
+                    knee1.publish((best[i+2]/8.0)*limit)
+                    knee3.publish((best[i+3]/8.0)*limit)
+                    ankle2.publish((best[i+4]/8.0)*limit)
+                    ankle4.publish((best[i+5]/8.0)*limit)
+                    ankle1.publish((best[i+6]/8.0)*limit)
+                    ankle3.publish((best[i+7]/8.0)*limit)
+
+                    rospy.sleep(1.2)
 
     performance = final_position
     rospy.loginfo(f'Performance: {performance}')
