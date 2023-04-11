@@ -40,15 +40,23 @@ def final_position_callback(data):
         pass
 
 def callback_laser(msg):
-  # 120 degrees into 3 regions
-  # receive a value of range between 0 and 10.
-  regions = [ 
-    min(min(msg.ranges[0:2]), 10),
-    min(min(msg.ranges[3:5]), 10),
-    min( min(msg.ranges[6:9]), 10),
-    ]
+    ranges = list(msg.ranges)
 
-  rospy.loginfo(regions)
+    # Find closest object within a certain range
+    min_range = 0.5  # meters
+    max_range = 5.0  # meters
+    closest_object = None
+    for i in range(len(ranges)):
+        if min_range <= ranges[i] <= max_range:
+            if closest_object is None or ranges[i] < closest_object[1]:
+                closest_object = (i, ranges[i])
+
+    if closest_object is not None:
+        # Object detected within range
+        print("Object detected at index {}, distance {}".format(closest_object[0], closest_object[1]))
+    else:
+        # No objects detected within range
+        print("No objects detected")
 
 def main():
     unload_controllers()
