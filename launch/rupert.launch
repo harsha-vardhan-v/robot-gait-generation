@@ -15,8 +15,9 @@
   <arg name="pitch" default="0"/>
   <arg name="yaw" default="0"/>
 
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-
+  <!-- <include file="$(find gazebo_ros)/launch/empty_world.launch"> -->
+  <include file="$(find rupert_learns)/launch/start.launch">
+   <arg name="world" value="$(find rupert_learns)/worlds/obstacles.world"/>
 
   <!-- <include file="$(find hector_gazebo_worlds)/launch/start.launch">
    <arg name="world" value="$(find hector_gazebo_worlds)/worlds/rolling_landscape_120m.world"/> -->
