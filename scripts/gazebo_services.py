@@ -4,10 +4,14 @@ import rospy
 from controller_manager_msgs.srv import LoadController, UnloadController, SwitchController
 from gazebo_msgs.srv import DeleteModel, SpawnModel
 from geometry_msgs.msg import Pose
+from gazebo_msgs.srv import GetPhysicsProperties, SetPhysicsProperties
 
 switch_controller = rospy.ServiceProxy('rupert/controller_manager/switch_controller', SwitchController)
 load_controller = rospy.ServiceProxy('rupert/controller_manager/load_controller', LoadController)
 unload_controller = rospy.ServiceProxy('rupert/controller_manager/unload_controller', UnloadController)
+get_physics_properties = rospy.ServiceProxy('/gazebo/get_physics_properties', GetPhysicsProperties)
+set_physics_properties = rospy.ServiceProxy('/gazebo/set_physics_properties', SetPhysicsProperties)
+
 
 def call_spawn_model(model_name: str, model_xml: str, robot_namespace: str, initial_pose: Pose, reference_frame: str):
     try:
@@ -58,6 +62,31 @@ def unload_controllers():
             unload_controller(controller)
 
         rospy.loginfo('Unloaded controllers')
+
+    except rospy.ServiceException as e:
+        rospy.logwarn(e)
+
+def start_simulation():
+    try:
+        physics_properties = get_physics_properties()
+        physics_properties.pause = False
+
+        set_physics_properties(physics_properties.time_step, physics_properties.max_update_rate,
+                        physics_properties.gravity, physics_properties.ode_config, physics_properties.pause)
+
+    except rospy.ServiceException as e:
+        rospy.logwarn(e)
+
+def pause_simulation():
+    try:
+        unload_controllers()
+        call_delete_model('rupert')
+
+        physics_properties = get_physics_properties()
+        physics_properties.pause = True
+
+        set_physics_properties(physics_properties.time_step, physics_properties.max_update_rate,
+                        physics_properties.gravity, physics_properties.ode_config, physics_properties.pause)
 
     except rospy.ServiceException as e:
         rospy.logwarn(e)
