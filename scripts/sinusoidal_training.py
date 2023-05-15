@@ -12,7 +12,7 @@ from gazebo_msgs.msg import ModelStates
 from gazebo_services import unload_controllers, load_controllers, call_spawn_model, call_delete_model, start_simulation, pause_simulation
 
 # Defaults
-population_size = 4
+population_size = 50
 length = 240
 limit = 1.6
 bias = True
@@ -340,10 +340,14 @@ def main():
 
         for j in range(0, population_size, 2):
             index1, index2 = random.choices(wheel, k=2)
-            parent1 = pop[index1]
-            parent2 = pop[index2]
-            fitness1 = fit[index1]
-            fitness2 = fit[index2]
+
+            while index1 == index2:
+                index1, index2 = random.choices(wheel, k=2)
+            
+            # parent1 = pop[index1]
+            # parent2 = pop[index2]
+            # fitness1 = fit[index1]
+            # fitness2 = fit[index2]
 
             family = [pop[index1], pop[index2]]
             family_fitness = [fit[index1], fit[index2]]
@@ -352,11 +356,15 @@ def main():
 
             family, family_fitness, family_hei, family_dist = select_two(family, family_fitness, family_hei, family_dist)
 
+            rospy.loginfo(f'Individual {j}: {family_fitness[0]}')
+            rospy.loginfo(f'Individual {j+1}: {family_fitness[1]}')
+
             surv.extend(family)
             sco.extend(family_fitness)
             hei.extend(family_hei)
             dis.extend(family_dist)
 
+        rospy.loginfo('Mutating population')
         if generation<switch_mutation_gen:
             mutate(0.3,0.15)
         else:
@@ -369,6 +377,7 @@ def main():
         fit = np.array(sco)
         height_arr = np.array(hei)
         dist_arr = np.array(dis)
+        total_fitness = np.sum(fit)
 
         running_fitness.append(np.max(fit))
         running_height.append(np.max(height_arr))
