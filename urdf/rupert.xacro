@@ -83,7 +83,7 @@
     </inertial>
   </link>
 
-  <!-- <link name="block1">
+  <link name="block1">
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -107,7 +107,7 @@
     iyy="${mass_block / 12.0 * (block_height*block_height + block_width*block_width)}" iyz="0.0"
     izz="${mass_block / 12.0 * (block_width*block_width + block_length*block_length)}"/>
     </inertial>
-  </link> -->
+  </link>
 
     <link name="block2">
     <collision>
@@ -187,12 +187,12 @@
     </inertial>
   </link>
 
-  <!-- <joint name="block_j1" type="fixed">
+  <joint name="block_j1" type="fixed">
     <parent link="body"/>
     <child link="block1"/>
     <origin xyz="${body_width/2} ${body_length/2} 0" rpy="0 0 0.785398"/>
     <axis xyz="0 0 1" />
-  </joint> -->
+  </joint>
 
   <joint name="block_j2" type="fixed">
     <parent link="body"/>
@@ -215,13 +215,13 @@
     <axis xyz="0 0 1" />
   </joint>
 
-  <!-- <joint name="hip_j1" type="revolute">
+  <joint name="hip_j1" type="revolute">
     <parent link="block1"/>
     <child link="hip1"/>
     <origin xyz="${block_width/2} 0 0" rpy="0 0 -3.14"/>
     <axis xyz="0 0 1" />
     <limit effort="300" velocity="1.0" lower="-1.7" upper="1.7"/>
-  </joint> -->
+  </joint>
 
     <joint name="hip_j2" type="revolute">
     <parent link="block2"/>
@@ -250,7 +250,7 @@
   </joint>
 
   <!-- Base Link -->
-  <!-- <link name="hip1">
+  <link name="hip1">
     <collision>
       <origin xyz="${-hip_width/2} 0 0" rpy="0 0 0"/>
       <geometry>
@@ -274,7 +274,7 @@
 	  iyy="${mass_hip / 12.0 * (hip_height*hip_height + hip_width*hip_width)}" iyz="0.0"
 	  izz="${mass_hip / 12.0 * (hip_length*hip_length + hip_width*hip_width)}"/>
     </inertial>
-  </link> -->
+  </link>
 
     <link name="hip2">
     <collision>
@@ -354,14 +354,14 @@
     </inertial>
   </link>
 
-  <!-- <joint name="knee_j1" type="revolute">
+  <joint name="knee_j1" type="revolute">
     <parent link="hip1"/>
     <child link="leg1"/>
     <origin xyz="${-hip_width} 0 ${-hip_height/3}" rpy="0 ${-PI/2-0.4} 0"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.7"/>
     <limit effort="300" velocity="1.0" lower="-1.7" upper="1.7"/>
-  </joint> -->
+  </joint>
 
   <joint name="knee_j2" type="revolute">
     <parent link="hip2"/>
@@ -391,7 +391,7 @@
   </joint>
 
   <!-- Middle Link -->
-  <!-- <link name="leg1">
+  <link name="leg1">
     <collision>
       <origin xyz="0 0 ${leg_height/2}" rpy="0 0 0"/>
       <geometry>
@@ -415,7 +415,7 @@
 	  iyy="${mass_leg / 12.0 * (leg_height*leg_height + leg_width*leg_width)}" iyz="0.0"
 	  izz="${mass_leg / 12.0 * (leg_width*leg_width + leg_length*leg_length)}"/>
     </inertial>
-  </link> -->
+  </link>
 
     <link name="leg2">
     <collision>
@@ -495,14 +495,14 @@
     </inertial>
   </link>
 
-  <!-- <joint name="ankle_j1" type="revolute">
+  <joint name="ankle_j1" type="revolute">
     <parent link="leg1"/>
     <child link="foot1"/>
     <origin xyz="0 0 ${leg_height}" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.7"/>
     <limit effort="300" velocity="1.0" lower="-1.7" upper="1.7"/>
-  </joint> -->
+  </joint>
 
   <joint name="ankle_j2" type="revolute">
     <parent link="leg2"/>
@@ -513,14 +513,14 @@
     <limit effort="300" velocity="1.0" lower="-1.7" upper="1.7"/>
   </joint>
 
-  <joint name="ankle_j3" type="revolute">
+  <!-- <joint name="ankle_j3" type="revolute">
     <parent link="leg3"/>
     <child link="foot3"/>
     <origin xyz="0 0 ${leg_height}" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0.7"/>
     <limit effort="300" velocity="1.0" lower="-1.7" upper="1.7"/>
-  </joint>
+  </joint> -->
 
   <joint name="ankle_j4" type="revolute">
     <parent link="leg4"/>
@@ -532,7 +532,7 @@
   </joint>
 
   <!-- Top Link -->
-  <!-- <link name="foot1">
+  <link name="foot1">
     <collision>
       <origin xyz="0 0 ${foot_height/2}" rpy="0 0 0"/>
       <geometry>
@@ -556,7 +556,7 @@
 	  iyy="${mass_foot / 12.0 * (foot_width*foot_width + foot_height*foot_height)}" iyz="0.0"
 	  izz="${mass_foot / 12.0 * (foot_width*foot_width + foot_length*foot_length)}"/>
     </inertial>
-  </link> -->
+  </link>
 
     <link name="foot2">
     <collision>
@@ -584,7 +584,7 @@
     </inertial>
   </link>
 
-    <link name="foot3">
+    <!-- <link name="foot3">
     <collision>
       <origin xyz="0 0 ${foot_height/2}" rpy="0 0 0"/>
       <geometry>
@@ -608,7 +608,7 @@
     iyy="${mass_foot / 12.0 * (foot_width*foot_width + foot_height*foot_height)}" iyz="0.0"
     izz="${mass_foot / 12.0 * (foot_width*foot_width + foot_length*foot_length)}"/>
     </inertial>
-  </link>
+  </link> -->
 
     <link name="foot4">
     <collision>
@@ -638,7 +638,7 @@
 
 
 
-  <!-- <transmission name="tran1">
+  <transmission name="tran1">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="hip_j1">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
@@ -647,7 +647,7 @@
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
-  </transmission> -->
+  </transmission>
 
   <transmission name="tran2">
     <type>transmission_interface/SimpleTransmission</type>
@@ -683,7 +683,7 @@
     </actuator>
   </transmission>
 
-  <!-- <transmission name="tran5">
+  <transmission name="tran5">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="knee_j1">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
@@ -692,7 +692,7 @@
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
-  </transmission> -->
+  </transmission>
 
   <transmission name="tran6">
     <type>transmission_interface/SimpleTransmission</type>
@@ -728,7 +728,7 @@
     </actuator>
   </transmission>
 
-  <!-- <transmission name="tran9">
+  <transmission name="tran9">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="ankle_j1">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
@@ -737,7 +737,7 @@
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
-  </transmission> -->
+  </transmission>
 
   <transmission name="tran10">
     <type>transmission_interface/SimpleTransmission</type>
@@ -751,7 +751,7 @@
   </transmission>
 
 
-  <transmission name="tran11">
+  <!-- <transmission name="tran11">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="ankle_j3">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
@@ -760,7 +760,7 @@
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
-  </transmission>
+  </transmission> -->
 
   <transmission name="tran12">
     <type>transmission_interface/SimpleTransmission</type>

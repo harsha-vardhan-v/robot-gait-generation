@@ -38,8 +38,13 @@ def load_controllers():
         rospy.wait_for_service('rupert/controller_manager/load_controller')
         rospy.wait_for_service('rupert/controller_manager/switch_controller')
 
+        # Default
         #controllers = ['joint_state_controller', '/rupert/joint1_position_controller', '/rupert/joint2_position_controller','/rupert/joint3_position_controller','/rupert/joint4_position_controller','/rupert/joint5_position_controller','/rupert/joint6_position_controller','/rupert/joint7_position_controller','/rupert/joint8_position_controller','/rupert/joint9_position_controller','/rupert/joint10_position_controller','/rupert/joint11_position_controller','/rupert/joint12_position_controller']
-        controllers = ['joint_state_controller', '/rupert/joint2_position_controller','/rupert/joint3_position_controller','/rupert/joint4_position_controller','/rupert/joint6_position_controller','/rupert/joint7_position_controller','/rupert/joint8_position_controller','/rupert/joint10_position_controller','/rupert/joint11_position_controller','/rupert/joint12_position_controller']
+        
+        # Leg1
+        #controllers = ['joint_state_controller', '/rupert/joint2_position_controller','/rupert/joint3_position_controller','/rupert/joint4_position_controller','/rupert/joint6_position_controller','/rupert/joint7_position_controller','/rupert/joint8_position_controller','/rupert/joint10_position_controller','/rupert/joint11_position_controller','/rupert/joint12_position_controller']
+        # Leg3
+        controllers = ['joint_state_controller', '/rupert/joint1_position_controller', '/rupert/joint2_position_controller','/rupert/joint4_position_controller','/rupert/joint5_position_controller','/rupert/joint6_position_controller','/rupert/joint8_position_controller','/rupert/joint9_position_controller','/rupert/joint10_position_controller','/rupert/joint12_position_controller']
 
 
         for controller in controllers:
